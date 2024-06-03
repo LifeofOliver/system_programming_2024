@@ -1,0 +1,1 @@
+LD_PRELOAD=./noimshow.so ./raspbot 192.168.0.4 8888 0 -1
