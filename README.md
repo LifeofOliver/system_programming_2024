@@ -1,3 +1,3 @@
 # system_programming_2024
 
-MASTER BRANCH로 가시오.
+Our project is stored in master branch.
