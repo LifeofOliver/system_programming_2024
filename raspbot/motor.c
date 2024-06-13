@@ -21,6 +21,8 @@ unsigned char frontbuffer[4] = {1, 80, 1, 80};
 unsigned char backbuffer[4] = {0, 80, 0, 80};
 unsigned char strong_right[4] = {1, 50, 0, 50};
 unsigned char strong_left[4] = {0, 50, 1, 50};
+unsigned char cam_right[2] = {1, 70};
+unsigned char cam_left[2] = {1, 110};
 
 char car_d = 'e';
 char d = 'f';
@@ -165,7 +167,7 @@ void tracking(){
 	right_2 = digitalRead(RIGHT_sensor2);
 	left_1 = digitalRead(LEFT_sensor1);
 	left_2 = digitalRead(LEFT_sensor2);
-	
+
 	// 1 0 0 1	
 	if (left_1 == 1 && left_2 == 0 && right_1 == 0 && right_2 == 1){
 		write_array(0x01, frontbuffer, 4);
@@ -210,12 +212,12 @@ void tracking(){
 	// 0 0 0 0 or 0 0 0 1 or 1 0 0 0
 	if ((left_1 == 0 && left_2 == 0 && right_1 == 0 && right_2 == 0) || (left_1 == 0 && left_2 == 0 && right_1 == 0 && right_2 == 1) || (left_1 == 1 && left_2 == 0 && right_1 == 0 && right_2 == 0)){
 		write_array(0x01, frontbuffer, 4);
-		delay(200);
+		delay(130);
 		write_array(0x01, stopbuffer, 4);
 		delay(100);
 		
 		update_pos();
-
+		
 		d = get_direction(car_row, car_col, car_d);
 		
 		printf("car_direction is %c\n",car_d);
@@ -333,8 +335,6 @@ char get_direction(int row, int col, char car_d) {
 
 
     float q_l[3] = {f_q, r_q, l_q};
-
-   //printf("Front Q : %f / Right Q : %f / Left Q : %f / Back Q : % f\n", f_q, r_q, l_q, b_q);
 
     for (int i = 0; i < 3; i++) {
         if (q_l[i] > com_q) {

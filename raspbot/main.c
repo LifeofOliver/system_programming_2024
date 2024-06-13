@@ -30,8 +30,6 @@ void *qr_code_reader(void *arg){
 		
 		pthread_mutex_unlock(&shared_data->mutex);	
 		printf("position x y: %d\n",shared_data->qr_data);
-		
-
 	}
 	return NULL;
 }
@@ -76,15 +74,7 @@ void* ServerCommunication(void* arg) {
 	
 	int rows = data->client.row;
 	int cols = data->client.col;
-	
-	if(bomb > 0){ 
-		data->client.action = setBomb;
-		bomb -= 1;
-	}
-	else{
-		data->client.action = move;
-	}
-        pthread_mutex_unlock(&data->mutex);
+    pthread_mutex_unlock(&data->mutex);
     }
 
     return NULL;
@@ -98,13 +88,23 @@ void* MotorThread(void* arg){
 
     while (1) {
 	pthread_mutex_lock(&data->mutex);
-        if (send(socket_file_disc, &(data->client), sizeof(data->client), 0) < 0) {
-            perror("Error sending data to server");
-            break;
-        }
-        printf("Sent action (%d, %d, %d) to server\n", data->client.row, data->client.col, data->client.action);	    
-        pthread_mutex_unlock(&data->mutex);
-	delay(650);
+	if(Bomb > 0 && data->client.action == move){
+		data->client.action = setBomb;
+		Bomb -= 1;
+	}
+	else{
+		data->client.action = move;
+	}
+	
+    if (send(socket_file_disc, &(data->client), sizeof(data->client), 0) < 0) {
+        perror("Error sending data to server");
+        break;
+    }
+        
+
+    printf("Sent action (%d, %d, %d) to server\n", data->client.row, data->client.col, data->client.action);	    
+    pthread_mutex_unlock(&data->mutex);
+	delay(300);
 	}
 	return NULL;
 }
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]){
 	//socket address
 	struct sockaddr_in serv_addr;
 	
-	delay(3000);
+	delay(1000);
 	
 	//wiringPiSetup()
 	wiringPiSetup();
@@ -156,26 +156,26 @@ int main(int argc, char *argv[]){
 	pinMode(LEFT_sensor1, INPUT);
 	pinMode(LEFT_sensor2, INPUT);
 	
-	    
-    
-    
-    
-    int sock_file_disc;
-    sock_file_disc = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock_file_disc < 0) {
-	perror("Error opening socket");
-	exit(1);
-	}
 
-    memset(&serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(SERVER_PORT);
-    serv_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
+    
+    
+    
+	    int sock_file_disc;
+	    sock_file_disc = socket(AF_INET, SOCK_STREAM, 0);
+	    if (sock_file_disc < 0) {
+		perror("Error opening socket");
+		exit(1);
+		}
 
-    if (connect(sock_file_disc, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
-	perror("Error connecting to the server");
-	exit(1);
-	}
+	    memset(&serv_addr, 0, sizeof(serv_addr));
+	    serv_addr.sin_family = AF_INET;
+	    serv_addr.sin_port = htons(SERVER_PORT);
+	    serv_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
+
+	    if (connect(sock_file_disc, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+		perror("Error connecting to the server");
+		exit(1);
+		}
 
     printf("Connected to the server at %s:%d\n", SERVER_IP, SERVER_PORT);
     
@@ -196,6 +196,15 @@ int main(int argc, char *argv[]){
 		printf("\n");
 		return 1;
 	}
+	
+	
+	//initialization
+	unsigned char InitCam1[2] = {1, 93};
+	unsigned char InitCam2[2] = {2, 85};
+	write_array(0x03, InitCam1, 2);
+	write_array(0x03, InitCam2, 2);
+	
+	
 	while(1) {
 		tracking();
 		delay(10);
